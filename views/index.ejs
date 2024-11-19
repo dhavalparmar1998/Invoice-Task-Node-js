@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Invoice</title>
+</head>
+<body>
+  <h1>Create Invoice</h1>
+  <form id="invoiceForm">
+    <label for="customerName">Customer Name:</label>
+    <input type="text" id="customerName" name="customerName" required><br><br>
+
+    <label for="mobileNumber">Mobile Number:</label>
+    <input type="tel" id="mobileNumber" name="mobileNumber" pattern="[0-9]{10}" required><br><br>
+
+    <h3>Products:</h3>
+    <div id="productList">
+      <div class="product">
+        <label for="productName">Product Name:</label>
+        <input type="text" name="products[0][name]" required>
+
+        <label for="productRate">Rate:</label>
+        <input type="number" name="products[0][rate]" step="0.01" required>
+
+        <label for="productQuantity">Quantity:</label>
+        <input type="number" name="products[0][quantity]" required>
+
+        <label for="productAmount">Amount:</label>
+        <input type="number" name="products[0][amount]" step="0.01" required>
+      </div>
+    </div>
+    <br>
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const data = {
+        customerName: formData.get('customerName'),
+        mobileNumber: formData.get('mobileNumber'),
+        products: [
+          {
+            name: formData.get('products[0][name]'),
+            rate: parseFloat(formData.get('products[0][rate]')),
+            quantity: parseInt(formData.get('products[0][quantity]')),
+            amount: parseFloat(formData.get('products[0][amount]'))
+          }
+        ]
+      };
+
+      try {
+        const response = await fetch('http://localhost:3000/api/invoices/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const result = await response.json();
+        if (result.pdfUrl) {
+          alert('Invoice added successfully'); // Success alert
+          window.location.href = `http://localhost:3000${result.pdfUrl}`;
+        } else {
+          alert('Error creating invoice');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while creating the invoice');
+      }
+    });
+  </script>
+</body>
+</html>
